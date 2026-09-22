@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KYC-Bench — Does the agent actually get it right?</title>
+<meta name="description" content="An open benchmark testing whether AI agents can handle real KYC/AML case reviews.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0E1826;
+    --navy-2:#152238;
+    --paper:#F7F4EA;
+    --ink:#1C2430;
+    --line:#E1D9C4;
+    --mute:#8B96AC;
+    --accent:#C77D2E;
+    --accent-soft:rgba(199,125,46,0.14);
+    --good:#4B7A5E;
+    --bad:#A6402F;
+    --radius:12px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Sans',sans-serif;
+    line-height:1.55;
+  }
+  h1,h2,h3{font-family:'Newsreader',serif;font-weight:500;margin:0;}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 32px;}
+  a{color:inherit;}
+
+  /* ---- Nav ---- */
+  header{
+    position:sticky;top:0;z-index:50;
+    background:rgba(14,24,38,0.92);
+    backdrop-filter:blur(8px);
+    border-bottom:1px solid rgba(255,255,255,0.08);
+  }
+  .nav-inner{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:18px 32px;max-width:1120px;margin:0 auto;
+  }
+  .brand{display:flex;align-items:center;gap:10px;color:#F7F4EA;text-decoration:none;}
+  .brand svg{width:26px;height:26px;flex-shrink:0;}
+  .brand span{font-family:'Newsreader',serif;font-size:19px;font-weight:500;}
+  nav.links{display:flex;gap:4px;}
+  nav.links a{
+    font-size:14px;color:#AEB9CE;text-decoration:none;
+    padding:8px 16px;border-radius:20px;transition:color 0.15s ease, background 0.15s ease;
+  }
+  nav.links a:hover{color:#F7F4EA;background:rgba(255,255,255,0.06);}
+  .nav-cta{
+    font-size:14px;color:var(--navy);background:#F7F4EA;text-decoration:none;
+    padding:9px 18px;border-radius:20px;font-weight:500;
+  }
+  .menu-btn{display:none;background:none;border:none;color:#F7F4EA;cursor:pointer;padding:6px;}
+  .menu-btn svg{width:22px;height:22px;}
+
+  /* ---- Hero ---- */
+  .hero{
+    background:linear-gradient(180deg, var(--navy) 0%, #101B2C 100%);
+    color:#EEF1F7;
+    padding:88px 0 72px;
+  }
+  .hero-grid{display:grid;grid-template-columns:1.15fr 0.85fr;gap:56px;align-items:center;}
+  .eyebrow{
+    display:flex;align-items:center;gap:10px;
+    font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.04em;
+    color:#8FA5C2;margin-bottom:22px;
+  }
+  .eyebrow .dash{width:20px;height:1px;background:#3E5476;}
+  .hero h1{font-size:clamp(34px,4.4vw,50px);line-height:1.12;color:#F7F4EA;margin-bottom:22px;letter-spacing:-0.01em;}
+  .hero h1 em{font-style:italic;color:var(--accent);}
+  .hero p.lede{font-size:17px;color:#AEB9CE;max-width:520px;margin-bottom:36px;}
+  .stat-row{display:flex;gap:40px;border-top:1px solid rgba(255,255,255,0.12);padding-top:24px;flex-wrap:wrap;}
+  .stat b{display:block;font-family:'Newsreader',serif;font-size:28px;font-weight:500;color:#F7F4EA;}
+  .stat span{font-size:13px;color:#8394AE;}
+
+  .case-card{
+    background:var(--navy-2);border:1px solid rgba(255,255,255,0.1);border-radius:var(--radius);
+    padding:24px;font-family:'IBM Plex Mono',monospace;
+  }
+  .case-card .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+  .case-card .top span{font-size:11px;color:#7688AE;letter-spacing:0.04em;}
+  .case-card .stamp{
+    font-size:11px;font-weight:500;letter-spacing:0.05em;color:var(--accent);
+    border:1px solid var(--accent);border-radius:4px;padding:3px 9px;transform:rotate(-2deg);
+  }
+  .case-card h3{font-family:'Newsreader',serif;font-size:17px;color:#F7F4EA;margin-bottom:14px;letter-spacing:0;}
+  .case-card .row{display:flex;justify-content:space-between;font-size:12.5px;color:#AEB9CE;padding:9px 0;border-top:1px dashed rgba(255,255,255,0.1);}
+  .case-card .row:first-of-type{border-top:none;}
+  .case-card .flag{color:var(--accent);}
+  .case-card .note{margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.1);font-size:12px;color:#8394AE;font-family:'IBM Plex Sans',sans-serif;line-height:1.6;}
+
+  /* ---- Sections ---- */
+  section.block{padding:72px 0;border-bottom:1px solid var(--line);}
+  section.block:last-of-type{border-bottom:none;}
+  .section-head{display:flex;gap:18px;align-items:flex-start;margin-bottom:36px;}
+  .section-icon{
+    width:44px;height:44px;flex-shrink:0;border-radius:50%;
+    border:1px solid var(--line);display:flex;align-items:center;justify-content:center;
+  }
+  .section-icon svg{width:20px;height:20px;stroke:var(--ink);}
+  .section-label{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.04em;color:var(--mute);margin-bottom:6px;}
+  .section-head h2{font-size:26px;}
+  .section-body{max-width:680px;margin-left:62px;}
+  .section-body p{font-size:15.5px;color:#3B4353;margin:0 0 16px;}
+  .section-body p:last-child{margin-bottom:0;}
+
+  .steps{list-style:none;margin:0;padding:0;counter-reset:step;}
+  .steps li{
+    counter-increment:step;position:relative;padding-left:38px;margin-bottom:18px;font-size:15px;color:#3B4353;
+  }
+  .steps li::before{
+    content:counter(step);position:absolute;left:0;top:0;
+    width:24px;height:24px;border-radius:50%;background:var(--accent-soft);color:var(--accent);
+    font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .steps li b{color:var(--ink);}
+
+  .cost-table{width:100%;border-collapse:collapse;font-size:14px;margin-top:8px;}
+  .cost-table th,.cost-table td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);}
+  .cost-table th{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.04em;color:var(--mute);font-weight:500;}
+  .cost-table td.hi{color:var(--bad);font-weight:500;}
+  .cost-table td.lo{color:var(--good);}
+
+  .repo-table{width:100%;border-collapse:collapse;font-size:14.5px;}
+  .repo-table td{padding:11px 0;border-bottom:1px solid var(--line);vertical-align:top;}
+  .repo-table td:first-child{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--ink);width:150px;padding-right:16px;}
+  .repo-table td:last-child{color:#3B4353;}
+
+  .roadmap{display:grid;grid-template-columns:1fr 1fr;gap:28px;}
+  .roadmap h4{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.04em;color:var(--mute);margin-bottom:14px;text-transform:none;}
+  .roadmap ul{list-style:none;margin:0;padding:0;}
+  .roadmap li{font-size:14.5px;color:#3B4353;padding:7px 0 7px 24px;position:relative;}
+  .roadmap li::before{position:absolute;left:0;top:8px;font-size:12px;}
+  .roadmap .done li::before{content:"●";color:var(--good);}
+  .roadmap .todo li::before{content:"○";color:var(--mute);}
+
+  /* ---- Footer / CTA ---- */
+  .cta-band{background:var(--navy);color:#EEF1F7;padding:64px 0;text-align:center;}
+  .cta-band h2{color:#F7F4EA;font-size:28px;margin-bottom:14px;}
+  .cta-band p{color:#AEB9CE;font-size:15px;max-width:460px;margin:0 auto 28px;}
+  .cta-buttons{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;}
+  .btn-primary{
+    background:var(--accent);color:#1A1006;text-decoration:none;font-weight:500;font-size:14.5px;
+    padding:13px 26px;border-radius:8px;display:inline-flex;align-items:center;gap:8px;
+  }
+  .btn-secondary{
+    background:transparent;color:#EEF1F7;text-decoration:none;font-weight:500;font-size:14.5px;
+    padding:13px 26px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);
+  }
+  footer{padding:28px 0;text-align:center;font-size:13px;color:var(--mute);}
+  footer a{text-decoration:underline;}
+
+  @media (max-width:840px){
+    .hero-grid{grid-template-columns:1fr;}
+    nav.links,.nav-cta{display:none;}
+    .menu-btn{display:block;}
+    .section-body{margin-left:0;margin-top:18px;}
+    .section-head{flex-direction:column;}
+    .roadmap{grid-template-columns:1fr;}
+    .stat-row{gap:28px;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="nav-inner">
+    <a class="brand" href="#top">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#C77D2E" stroke-width="1.6"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+      <span>KYC-Bench</span>
+    </a>
+    <nav class="links">
+      <a href="#why">Why</a>
+      <a href="#walkthrough">Walkthrough</a>
+      <a href="#scoring">Scoring</a>
+      <a href="#repo">Repo</a>
+    </nav>
+    <a class="nav-cta" href="https://github.com/dipina1502innovator/kyc-bench" target="_blank" rel="noopener">GitHub ↗</a>
+    <button class="menu-btn" aria-label="Open menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+  </div>
+</header>
+
+<section class="hero" id="top">
+  <div class="wrap hero-grid">
+    <div>
+      <div class="eyebrow"><span class="dash"></span>MIT LICENSE · V0.1 DRAFT · SYNTHETIC DATA ONLY</div>
+      <h1>Does the agent<br>actually get it <em>right</em>?</h1>
+      <p class="lede">An open benchmark that hands AI agents real KYC/AML case files — documents, ownership registries, watchlists — and scores the decision, not just whether the write-up sounds convincing.</p>
+      <div class="stat-row">
+        <div class="stat"><b>2</b><span>Cases built so far</span></div>
+        <div class="stat"><b>4</b><span>Task types planned</span></div>
+        <div class="stat"><b>0.40</b><span>Score cap on a critical miss</span></div>
+      </div>
+    </div>
+    <div class="case-card">
+      <div class="top"><span>CASE ONB-CORP-001</span><span class="stamp">EDD</span></div>
+      <h3>Sahyadri Agro Exports Pvt Ltd</h3>
+      <div class="row"><span>Direct ownership</span><span>60% · Nirmal Holdings LLP</span></div>
+      <div class="row"><span>Indirect ownership</span><span>30% via nominee</span></div>
+      <div class="row"><span>Screening result</span><span class="flag">PEP match — Karan Vaidya</span></div>
+      <div class="note">Traced through a nominee filing to an undisclosed principal who matches a PEP entry. Enhanced due diligence required under the policy's ownership and nominee rules.</div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="why">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="section-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round"><path d="M12 2 3 7v6c0 5 4 8 9 9 5-1 9-4 9-9V7l-9-5Z"/></svg></div>
+      <div>
+        <div class="section-label">SECTION 01</div>
+        <h2>Compliance is the gap in existing evals</h2>
+      </div>
+    </div>
+    <div class="section-body">
+      <p>Most AI benchmarks test investment banking, corporate law, or software engineering. Compliance review — the work banks do to check who a customer is and whether their activity looks suspicious — is not on that list, even though it's high-volume, expert-heavy work.</p>
+      <p>It's also a genuinely hard format for an agent. A single case means reading several documents, tracing ownership through a registry, screening names against a watchlist, and writing a note an auditor could follow. And mistakes aren't equal — missing a sanctions match costs far more than a false alarm, which plain accuracy scores hide.</p>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="walkthrough">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="section-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+      <div>
+        <div class="section-label">SECTION 02</div>
+        <h2>What one case looks like</h2>
+      </div>
+    </div>
+    <div class="section-body">
+      <ol class="steps">
+        <li><b>The agent gets a case file</b> — a company applying to open an account, with its own documents.</li>
+        <li><b>It looks up the company</b> in a mock registry tool and finds a 60% shareholder.</li>
+        <li><b>It keeps tracing</b> — that shareholder is itself owned by another entity.</li>
+        <li><b>It finds the trap</b> — the shares are held by a nominee on behalf of an undisclosed owner.</li>
+        <li><b>It screens that owner's name</b> and gets a watchlist match.</li>
+        <li><b>It decides</b> — hold for Enhanced Due Diligence, cite the rule, and write a note an auditor could follow.</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="scoring">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="section-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round"><path d="M3 3v18h18"/><path d="M7 16l4-6 3 3 5-8"/></svg></div>
+      <div>
+        <div class="section-label">SECTION 03</div>
+        <h2>Errors are weighted by consequence</h2>
+      </div>
+    </div>
+    <div class="section-body">
+      <p>Approving a case that needed Enhanced Due Diligence costs far more than sending a clean case to EDD by mistake. The scoring reflects that asymmetry directly:</p>
+      <table class="cost-table">
+        <tr><th>Case needed</th><th>Agent said</th><th>Cost</th></tr>
+        <tr><td>EDD</td><td>Approve</td><td class="hi">Severe — 1.00</td></tr>
+        <tr><td>Approve</td><td>EDD</td><td class="lo">Minor — 0.20</td></tr>
+        <tr><td>Reject</td><td>File STR</td><td>Moderate — 0.20</td></tr>
+      </table>
+      <p style="margin-top:18px;">There's also a critical-miss rule: if the agent misses the one piece of evidence that mattered most — the hidden PEP, the nominee filing — its total score is capped at <b>0.40</b>, however good the rest of its answer reads.</p>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="repo">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="section-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2Z"/></svg></div>
+      <div>
+        <div class="section-label">SECTION 04</div>
+        <h2>What's in the repository</h2>
+      </div>
+    </div>
+    <div class="section-body">
+      <table class="repo-table">
+        <tr><td>cases/</td><td>What the agent sees — documents, watchlist, company registry.</td></tr>
+        <tr><td>answers/</td><td>The correct answer for each case, kept out of the agent's view.</td></tr>
+        <tr><td>policy/</td><td>A short, invented bank policy every case is graded against.</td></tr>
+        <tr><td>kycbench/</td><td>Scoring logic, mock tools, and a small command-line tool.</td></tr>
+        <tr><td>docs/</td><td>Design notes and the rubric used to grade the written file note.</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="status" style="border-bottom:none;">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="section-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div>
+      <div>
+        <div class="section-label">SECTION 05</div>
+        <h2>Status and what's next</h2>
+      </div>
+    </div>
+    <div class="section-body">
+      <div class="roadmap">
+        <div class="done">
+          <h4>Built</h4>
+          <ul>
+            <li>Two full example cases</li>
+            <li>Synthetic bank policy</li>
+            <li>Automatic risk-weighted scoring</li>
+            <li>CLI + passing test suite</li>
+          </ul>
+        </div>
+        <div class="todo">
+          <h4>Planned</h4>
+          <ul>
+            <li>~40 cases across 4 task types</li>
+            <li>Policy variants by jurisdiction</li>
+            <li>Reasoning-faithfulness check</li>
+            <li>Expert rubric review</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="cta-band">
+  <div class="wrap">
+    <h2>Everything here is synthetic — the code isn't</h2>
+    <p>No real customer data, no real bank policy. The repo, cases and scoring logic are real and runnable today.</p>
+    <div class="cta-buttons">
+      <a class="btn-primary" href="https://github.com/dipina1502innovator/kyc-bench" target="_blank" rel="noopener">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+        View on GitHub
+      </a>
+      <a class="btn-secondary" href="https://github.com/dipina1502innovator/kyc-bench#contributing">Contribute a case</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">Built by Dipina Paul · MIT licensed · <a href="https://github.com/dipina1502innovator/kyc-bench" target="_blank" rel="noopener">github.com/dipina1502innovator/kyc-bench</a></div>
+</footer>
+
+<script>
+  const menuBtn = document.querySelector('.menu-btn');
+  const navLinks = document.querySelector('nav.links');
+  menuBtn.addEventListener('click', () => {
+    const open = navLinks.style.display === 'flex';
+    navLinks.style.display = open ? 'none' : 'flex';
+    navLinks.style.flexDirection = 'column';
+    navLinks.style.position = 'absolute';
+    navLinks.style.top = '64px';
+    navLinks.style.right = '20px';
+    navLinks.style.background = '#0E1826';
+    navLinks.style.padding = '10px';
+    navLinks.style.borderRadius = '10px';
+    navLinks.style.border = '1px solid rgba(255,255,255,0.1)';
+  });
+</script>
+
+</body>
+</html>
