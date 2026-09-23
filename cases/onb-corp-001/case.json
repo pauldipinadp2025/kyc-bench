@@ -1,0 +1,22 @@
+{
+  "case_id": "onb-corp-001",
+  "task_type": "corporate_onboarding",
+  "difficulty": "hard",
+  "expert_time_minutes": 120,
+  "instructions": "Review this new corporate customer. Trace beneficial ownership using the registry tool, screen every beneficial owner, and decide. Return a decision, a risk rating, the evidence IDs you relied on, the policy rules you applied, and a short file note an auditor could follow.",
+  "customer": {
+    "customer_id": "C-2001",
+    "full_name": "Sahyadri Agro Exports Pvt Ltd",
+    "type": "company"
+  },
+  "documents": [
+    {
+      "id": "D1",
+      "type": "certificate_of_incorporation",
+      "fields": { "company_id": "CO-100", "name": "Sahyadri Agro Exports Pvt Ltd" }
+    }
+  ],
+  "tools_available": ["registry_lookup", "screen_name", "get_document"],
+  "registry_file": "registry.json",
+  "watchlist_file": "watchlist.json"
+}
