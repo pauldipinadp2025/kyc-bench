@@ -1,0 +1,10 @@
+{
+  "case_id": "onb-corp-001",
+  "decision": "edd",
+  "risk_rating": "high",
+  "required_evidence": ["D1", "CO-200", "CO-300", "R7", "W1"],
+  "critical_evidence": ["W1", "R7"],
+  "required_rules": ["P-2.1", "P-3.1", "P-3.2", "P-4.1", "P-5.1"],
+  "traps": ["layered_ownership", "nominee_structure", "hidden_pep"],
+  "explanation": "Sahyadri is 60% owned by Nirmal Holdings, which is 50% owned by Blue Harbour, so Blue Harbour's principal holds 30% indirectly (0.6 x 0.5), above the 25% threshold. Blue Harbour uses a nominee (P-3.2). The principal, Karan Vaidya, matches a PEP entry on name, date of birth and nationality (P-4.1). Sanjay Nirmal also holds 30% and Meera Iyer 40% directly. EDD and senior approval required, risk High."
+}
