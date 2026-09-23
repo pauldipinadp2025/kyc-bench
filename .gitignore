@@ -1,5 +1,9 @@
-.env
 __pycache__/
 *.pyc
-storage/policies.json
 .venv/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+results/
+.env

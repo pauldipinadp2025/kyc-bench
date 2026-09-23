@@ -1,0 +1,21 @@
+[project]
+name = "kycbench"
+version = "0.1.0"
+description = "KYC-Bench: an open benchmark for AI agents on KYC/AML case reviews"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[project.scripts]
+kycbench = "kycbench.cli:main"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["kycbench"]
