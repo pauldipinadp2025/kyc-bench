@@ -1,0 +1,7 @@
+{
+  "decision": "approve",
+  "risk_rating": "low",
+  "evidence": ["D1", "D2", "W1"],
+  "rules": ["P-1.1", "P-1.2", "P-2.1", "P-2.2", "P-5.1"],
+  "file_note": "Passport valid to 2031; utility bill dated July 2026. Name partly matches PEP entry W1 (Rohan Mehta), but DOB (1991 vs 1962) and nationality (Indian vs Canadian) both differ, so cleared as a false positive under P-2.2. Low risk; approve."
+}
