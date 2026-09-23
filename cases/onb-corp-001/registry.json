@@ -1,0 +1,31 @@
+{
+  "CO-100": {
+    "name": "Sahyadri Agro Exports Pvt Ltd",
+    "type": "company",
+    "shareholders": [
+      { "holder_id": "CO-200", "percent": 60 },
+      { "holder_id": "P-11", "percent": 40 }
+    ]
+  },
+  "CO-200": {
+    "name": "Nirmal Holdings LLP",
+    "type": "llp",
+    "shareholders": [
+      { "holder_id": "CO-300", "percent": 50 },
+      { "holder_id": "P-12", "percent": 50 }
+    ]
+  },
+  "CO-300": {
+    "name": "Blue Harbour Ltd (offshore)",
+    "type": "company",
+    "notes": "Shares held by a nominee shareholder on behalf of an undisclosed principal, per filing R7",
+    "shareholders": [
+      { "holder_id": "N-1", "percent": 100 }
+    ],
+    "disclosed_principal": { "holder_id": "P-13", "source": "R7" }
+  },
+  "P-11": { "name": "Meera Iyer", "type": "person", "date_of_birth": "1985-06-30", "nationality": "Indian" },
+  "P-12": { "name": "Sanjay Nirmal", "type": "person", "date_of_birth": "1978-02-11", "nationality": "Indian" },
+  "P-13": { "name": "Karan Vaidya", "type": "person", "date_of_birth": "1969-09-09", "nationality": "Indian" },
+  "N-1": { "name": "Trident Nominee Services Ltd", "type": "nominee" }
+}
