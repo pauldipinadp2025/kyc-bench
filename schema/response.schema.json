@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "KYC-Bench agent response",
+  "type": "object",
+  "required": ["decision", "risk_rating", "evidence", "rules", "file_note"],
+  "properties": {
+    "decision": { "enum": ["approve", "edd", "reject", "file_str"] },
+    "risk_rating": { "enum": ["low", "medium", "high"] },
+    "evidence": { "type": "array", "items": { "type": "string" }, "description": "IDs of documents, watchlist entries or registry records relied on" },
+    "rules": { "type": "array", "items": { "type": "string" }, "description": "Policy rule IDs applied, e.g. P-2.2" },
+    "file_note": { "type": "string", "description": "Short note an auditor could follow" }
+  }
+}
